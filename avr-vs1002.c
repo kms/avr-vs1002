@@ -3,7 +3,7 @@
  * Karl-Martin Skontorp <kms@skontorp.net>
  */
 
-#define F_CPU 18e6
+#define F_CPU 18.432e6
 
 #include <avr/wdt.h>
 #include <avr/sleep.h>
@@ -40,29 +40,31 @@ void vs1002cmd_e(void);
 void vs1002data_s(void);
 void vs1002data_e(void);
 void vs1002Reset(void);
+void uartTx(char a);
+
+void uartTx(const char a) {
+    loop_until_bit_is_set(UCSR0A, UDRE0);
+    UDR0 = a;
+}
 
 void vs1002cmd_s() {
     VS1002_XCS_PORT &= ~(_BV(VS1002_XCS_PIN));
     VS1002_XDCS_PORT |= _BV(VS1002_XDCS_PIN);
-    _delay_us(1);
 }
 
 void vs1002cmd_e() {
     VS1002_XCS_PORT |= _BV(VS1002_XCS_PIN);
     VS1002_XDCS_PORT &= ~(_BV(VS1002_XDCS_PIN));
-    _delay_us(1);
 }
 
 void vs1002data_s() {
     VS1002_XCS_PORT |= _BV(VS1002_XCS_PIN);
     VS1002_XDCS_PORT &= ~(_BV(VS1002_XDCS_PIN));
-    _delay_us(1);
 }
 
 void vs1002data_e() {
     VS1002_XCS_PORT &= ~(_BV(VS1002_XCS_PIN));
     VS1002_XDCS_PORT |= _BV(VS1002_XDCS_PIN);
-    _delay_us(1);
 }
 
 void vs1002Reset() {
@@ -89,8 +91,13 @@ int main(void) {
 
     vs1002Reset();
 
+    DDRD |= _BV(DDD1);
+    UCSR0B = _BV(TXEN0) | _BV(RXEN0);
+    UBRR0L = 9;
+
     /* SPI */
-    SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPR1);
+    SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPR0);
+    SPSR = _BV(SPI2X);
 
     // 0x8000 + 6144 = 0x9800, 12.288MHz XTAL + clk-doubling
 
@@ -100,13 +107,13 @@ int main(void) {
     loop_until_bit_is_set(SPSR, SPIF);
     SPDR = 0x03;
     loop_until_bit_is_set(SPSR, SPIF);
-    SPDR = 0x00;
-    loop_until_bit_is_set(SPSR, SPIF);
     SPDR = 0x98;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x00;
     loop_until_bit_is_set(SPSR, SPIF);
     vs1002cmd_e();
 
-    /* Mode */
+    /* Mode: TEST */
     vs1002cmd_s();
     SPDR = 0x02;
     loop_until_bit_is_set(SPSR, SPIF);
@@ -114,8 +121,7 @@ int main(void) {
     loop_until_bit_is_set(SPSR, SPIF);
     SPDR = 0x08;
     loop_until_bit_is_set(SPSR, SPIF);
-    //SPDR = 0x20; // Test
-    SPDR = 0x00;
+    SPDR = 0x20; // Test
     loop_until_bit_is_set(SPSR, SPIF);
     vs1002cmd_e();
 
@@ -131,29 +137,82 @@ int main(void) {
     loop_until_bit_is_set(SPSR, SPIF);
     vs1002cmd_e();
 
-    /* Test */
-    //vs1002data_s();
-    //SPDR = 0x53;
-    //loop_until_bit_is_set(SPSR, SPIF);
-    //SPDR = 0xef;
-    //loop_until_bit_is_set(SPSR, SPIF);
-    //SPDR = 0x6e;
-    //loop_until_bit_is_set(SPSR, SPIF);
-    //SPDR = 0x7e;
-    //loop_until_bit_is_set(SPSR, SPIF);
-    //SPDR = 0x00;
-    //loop_until_bit_is_set(SPSR, SPIF);
-    //SPDR = 0x00;
-    //loop_until_bit_is_set(SPSR, SPIF);
-    //SPDR = 0x00;
-    //loop_until_bit_is_set(SPSR, SPIF);
-    //SPDR = 0x00;
-    //loop_until_bit_is_set(SPSR, SPIF);
-    //vs1002data_e();
+    /* Test 5kHz sine */
+    vs1002data_s();
+    SPDR = 0x53;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0xef;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x6e;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x7e;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x00;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x00;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x00;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x00;
+    loop_until_bit_is_set(SPSR, SPIF);
+    vs1002data_e();
 
-    //sei();
+    uint8_t t;
+	    
+    for (t = 0; t < 250; t++) {
+	_delay_ms(2);
+    }
+
+    /* End test */
+    vs1002data_s();
+    SPDR = 0x45;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x78;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x69;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x74;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x00;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x00;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x00;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x00;
+    loop_until_bit_is_set(SPSR, SPIF);
+    vs1002data_e();
+
+    /* Mode: PLAY */
+    vs1002cmd_s();
+    SPDR = 0x02;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x00;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x08;
+    loop_until_bit_is_set(SPSR, SPIF);
+    SPDR = 0x08; // STREAM
+    loop_until_bit_is_set(SPSR, SPIF);
+    vs1002cmd_e();
+
+    uint8_t i;
+    uint8_t buffer[256];
 
     for (;;) {
+	uartTx('.');
+
+	for (i = 0; i < 255; i++) {
+	    loop_until_bit_is_set(UCSR0A, RXC0);
+	    buffer[i] = UDR0;
+	}
+
 	loop_until_bit_is_set(VS1002_DREQ_PORT, VS1002_DREQ_PIN);
+
+	vs1002data_s();
+	for (i = 0; i < 255; i++) {
+	    loop_until_bit_is_set(SPSR, SPIF);
+	    SPDR = buffer[i];
+	}
+	vs1002data_e();
     }
 }

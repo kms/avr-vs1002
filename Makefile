@@ -17,7 +17,7 @@
 	TESTABLES = 
 	TESTRUNNER = 
 
-	SRC 	= $(TRG).c $(TESTABLES)
+	SRC 	= $(TRG).c $(TESTABLES) fifo.c
 
 #put additional assembler source file here
 	ASRC 	=
@@ -26,7 +26,7 @@
 	LIB	=
 
 #additional includes to compile
-	INC	= 
+	INC	= fifo.h 
 
 #assembler flags
 	ASFLAGS = -Wa, -gstabs
