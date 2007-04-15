@@ -11,6 +11,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <stdio.h>
+#include "fifo.h"
 
 /* PD5: RST */
 /* PD6: DREQ */
@@ -42,10 +43,19 @@ void vs1002data_e(void);
 void vs1002Reset(void);
 void uartTx(char a);
 
+//fifo *b;
+
 void uartTx(const char a) {
     loop_until_bit_is_set(UCSR0A, UDRE0);
     UDR0 = a;
 }
+
+/*ISR(USART_RX_vect) {
+  while (UCSR0A & _BV(RXC0)) {
+  fifoPut(b, UDR0);
+  }    
+  } 
+  */
 
 void vs1002cmd_s() {
     VS1002_XCS_PORT &= ~(_BV(VS1002_XCS_PIN));
@@ -60,11 +70,13 @@ void vs1002cmd_e() {
 void vs1002data_s() {
     VS1002_XCS_PORT |= _BV(VS1002_XCS_PIN);
     VS1002_XDCS_PORT &= ~(_BV(VS1002_XDCS_PIN));
+    _delay_us(1);
 }
 
 void vs1002data_e() {
     VS1002_XCS_PORT &= ~(_BV(VS1002_XCS_PIN));
     VS1002_XDCS_PORT |= _BV(VS1002_XDCS_PIN);
+    _delay_us(1);
 }
 
 void vs1002Reset() {
@@ -82,22 +94,23 @@ int main(void) {
     /* Ports */
     DDRB = _BV(PINB0) | _BV(PINB2) | _BV(PINB3) | _BV(PINB5);
     DDRD = _BV(PIND5) | _BV(PIND7);
-    PORTB = 0xff & (_BV(PINB0));
+    PORTB = 0xff; //& (_BV(PINB0));
     PORTC = 0xff;
-    PORTD = 0xff & (_BV(PIND5) | _BV(PIND6) | _BV(PIND7));
+    PORTD = 0xff;// & (_BV(PIND5) | _BV(PIND6) | _BV(PIND7));
 
     /* Power saving */
     set_sleep_mode(SLEEP_MODE_IDLE);
 
+    //b = fifoCreate(255);
     vs1002Reset();
 
     DDRD |= _BV(DDD1);
-    UCSR0B = _BV(TXEN0) | _BV(RXEN0);
+    UCSR0B = _BV(TXEN0) | _BV(RXEN0); // | _BV(RXCIE0);
     UBRR0L = 9;
 
     /* SPI */
-    SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPR0);
-    SPSR = _BV(SPI2X);
+    SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPR1) | _BV(SPR0);
+    //SPSR = _BV(SPI2X);
 
     // 0x8000 + 6144 = 0x9800, 12.288MHz XTAL + clk-doubling
 
@@ -137,7 +150,7 @@ int main(void) {
     loop_until_bit_is_set(SPSR, SPIF);
     vs1002cmd_e();
 
-    /* Test 5kHz sine */
+    /* Test 1.500kHz sine */
     vs1002data_s();
     SPDR = 0x53;
     loop_until_bit_is_set(SPSR, SPIF);
@@ -145,7 +158,7 @@ int main(void) {
     loop_until_bit_is_set(SPSR, SPIF);
     SPDR = 0x6e;
     loop_until_bit_is_set(SPSR, SPIF);
-    SPDR = 0x7e;
+    SPDR = 0x28;
     loop_until_bit_is_set(SPSR, SPIF);
     SPDR = 0x00;
     loop_until_bit_is_set(SPSR, SPIF);
@@ -158,8 +171,8 @@ int main(void) {
     vs1002data_e();
 
     uint8_t t;
-	    
-    for (t = 0; t < 250; t++) {
+
+    for (t = 0; t < 125; t++) {
 	_delay_ms(2);
     }
 
@@ -195,13 +208,13 @@ int main(void) {
     loop_until_bit_is_set(SPSR, SPIF);
     vs1002cmd_e();
 
-    uint8_t i;
-    uint8_t buffer[256];
+    uint16_t i;
+    uint8_t buffer[1000];
 
     for (;;) {
 	uartTx('.');
 
-	for (i = 0; i < 255; i++) {
+	for (i = 0; i < 1000; i++) {
 	    loop_until_bit_is_set(UCSR0A, RXC0);
 	    buffer[i] = UDR0;
 	}
@@ -209,7 +222,7 @@ int main(void) {
 	loop_until_bit_is_set(VS1002_DREQ_PORT, VS1002_DREQ_PIN);
 
 	vs1002data_s();
-	for (i = 0; i < 255; i++) {
+	for (i = 0; i < 1000; i++) {
 	    loop_until_bit_is_set(SPSR, SPIF);
 	    SPDR = buffer[i];
 	}

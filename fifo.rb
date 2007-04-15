@@ -1,7 +1,7 @@
 #!/usr/bin/ruby1.8
 
 b = Array.new
-bs = 256
+bs = 1000
 
 f = File.open(ARGV[0])
 
@@ -10,17 +10,20 @@ t2 = Time.now
 
 while true
     begin
-	b.push(f.read(bs))
+	r = f.read(bs)
+	if (r != nil) 
+	    b.push(r)
+	end
 	if (STDIN.read_nonblock(1) == '.')
 	    d = t1 - t2
 
-	    STDERR.write("%.2fkb/s [%dB]\n" % [((bs * 8) / d / 1000), b.length])
-	    puts (t2 - t1).to_s
-	    t2 = t1
-	    t1 = Time.now
+	    STDERR.write("%.2fkb/s [%dB]\n" % [((bs * 8) / d / 1000), b.length * bs])
 
 	    print b.shift
 	    STDOUT.flush
+
+	    t2 = t1
+	    t1 = Time.now
 	end
     rescue Errno::EAGAIN => e
     end
