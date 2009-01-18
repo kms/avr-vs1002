@@ -1,7 +1,8 @@
-/*
- * Scout -> Kenwood
- * Karl-Martin Skontorp LA9PMA <kms@skontorp.net>
- * $Id: fifo.h 81 2006-05-18 23:06:15Z kms $
+/* avr-vs1002
+ * Streaming from serial port to VS1002.
+ *
+ * (c) Karl-Martin Skontorp <kms@skontorp.net> ~ http://picofarad.org/
+ * Licensed under the GNU GPL 2.0 or later.
  */
 
 #ifndef _FIFO_H

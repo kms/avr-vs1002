@@ -1,4 +1,9 @@
 #!/usr/bin/ruby1.8
+# avr-vs1002
+# Streaming from serial port to VS1002.
+#
+# (c) Karl-Martin Skontorp <kms@skontorp.net> ~ http://picofarad.org/
+# Licensed under the GNU GPL 2.0 or later.
 
 b = Array.new
 bs = 1000

@@ -1,6 +1,8 @@
-/*
- * $Id$
- * Karl-Martin Skontorp <kms@skontorp.net>
+/* avr-vs1002
+ * Streaming from serial port to VS1002.
+ *
+ * (c) Karl-Martin Skontorp <kms@skontorp.net> ~ http://picofarad.org/
+ * Licensed under the GNU GPL 2.0 or later.
  */
 
 #define F_CPU 18.432e6
