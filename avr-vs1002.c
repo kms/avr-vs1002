@@ -175,7 +175,7 @@ int main(void) {
     uint8_t t;
 
     for (t = 0; t < 125; t++) {
-	_delay_ms(2);
+        _delay_ms(2);
     }
 
     /* End test */
@@ -214,20 +214,20 @@ int main(void) {
     uint8_t buffer[1000];
 
     for (;;) {
-	uartTx('.');
+        uartTx('.');
 
-	for (i = 0; i < 1000; i++) {
-	    loop_until_bit_is_set(UCSR0A, RXC0);
-	    buffer[i] = UDR0;
-	}
+        for (i = 0; i < 1000; i++) {
+            loop_until_bit_is_set(UCSR0A, RXC0);
+            buffer[i] = UDR0;
+        }
 
-	loop_until_bit_is_set(VS1002_DREQ_PORT, VS1002_DREQ_PIN);
+        loop_until_bit_is_set(VS1002_DREQ_PORT, VS1002_DREQ_PIN);
 
-	vs1002data_s();
-	for (i = 0; i < 1000; i++) {
-	    loop_until_bit_is_set(SPSR, SPIF);
-	    SPDR = buffer[i];
-	}
-	vs1002data_e();
+        vs1002data_s();
+        for (i = 0; i < 1000; i++) {
+            loop_until_bit_is_set(SPSR, SPIF);
+            SPDR = buffer[i];
+        }
+        vs1002data_e();
     }
 }
