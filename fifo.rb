@@ -2,7 +2,7 @@
 # avr-vs1002
 # Streaming from serial port to VS1002.
 #
-# (c) Karl-Martin Skontorp <kms@skontorp.net> ~ http://picofarad.org/
+# (c) Karl-Martin Skontorp <kms@skontorp.net> ~ http://22pf.org/
 # Licensed under the GNU GPL 2.0 or later.
 
 b = Array.new
